@@ -9,15 +9,15 @@ class IndicatorAlgo(QCAlgorithm):
         # Backtest Settings #
         #####################
         self.SetStartDate(2017, 1, 2)  # Set Start Date
-        self.SetEndDate(2017, 1, 7)  # Set End Date
-        self.SetCash(100000)  # Set Strategy Cash
+        self.SetEndDate(2018, 1, 7)  # Set End Date
+        self.SetCash(10000)  # Set Strategy Cash
         self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage)
 
         ###########################
         # Configurable parameters #
         ###########################
-        self.target_forex = "GBPUSD"  # Can be any forex pair
-        self.indicator_name = "macd"  # bollinger, momentum, or MACD
+        self.target_forex = "EURUSD"  # Can be any forex pair
+        self.indicator_name = "ichimoku"  # bollinger, momentum, or MACD
         self.warmup_lookback = 30  # Number of time periods resolution to load
         self.time_resolution = Resolution.Hour  # Resolution of periods/data to use
         self.resubmit_order_threshold = .01  # Percent at which we will update the limit order to cause a fill
@@ -77,7 +77,7 @@ class IndicatorAlgo(QCAlgorithm):
         elif self.indicator_name == "ichimoku":
             self.ichimoku = self.ICHIMOKU(self.target_forex, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
                                           self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
-                                          self.time_resolution * self.time_resolution)
+                                          self.time_resolution)
 
         # Processing variables
         self.pending_limit_price = 0
