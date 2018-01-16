@@ -19,7 +19,7 @@ class IndicatorAlgo(QCAlgorithm):
         self.target_forex = "EURUSD"  # Can be any forex pair
         self.indicator_name = "ichimoku"  # bollinger, momentum, or MACD
         self.warmup_lookback = 30  # Number of time periods resolution to load
-        self.time_resolution = Resolution.Hour  # Resolution of periods/data to use
+        self.time_resolution = Resolution.Minute  # Resolution of periods/data to use
         self.resubmit_order_threshold = .01  # Percent at which we will update the limit order to cause a fill
 
         # Bollinger Variables
