@@ -49,7 +49,7 @@ class Optimizer(object):
                 config_inst.update(_indicator_pgrid_elem)
                 self.param_grid.append(config_inst)
 
-    def run(self):
+    def run_opt(self):
         pp = pprint.PrettyPrinter(indent=4)
         cwd = os.path.dirname(os.path.realpath(__file__))
         root_dir = os.path.realpath(os.path.join(cwd,'../../'))
@@ -58,7 +58,7 @@ class Optimizer(object):
         run_launch_dir = os.path.join(root_dir,'Launcher/bin/Debug')
 
         if not os.path.exists(config_dir):
-            os.makedirs(directory)
+            os.makedirs(config_dir)
 
         pp.pprint('root_dir = {}'.format(root_dir))
         pp.pprint('config_dir = {}'.format(config_dir))
@@ -74,12 +74,15 @@ class Optimizer(object):
 
             ''' call QuantConnectLauncher '''
             os.chdir(run_launch_dir)
-            sp_out = subprocess.run(['mono','./QuantConnect.Lean.Launcher.exe'],stdout=subprocess.PIPE)
+            # sp_out = subprocess.run(['mono','./QuantConnect.Lean.Launcher.exe'],stdout=subprocess.PIPE)
+            sp_out = subprocess.call(['mono','./QuantConnect.Lean.Launcher.exe'])
 
             '''
             sp_out is of type: subprocess.CompletedProcess
             Process it after completion of command
             '''
+
+        os.chdir(root_dir)
 
 
     def __repr__(self):
