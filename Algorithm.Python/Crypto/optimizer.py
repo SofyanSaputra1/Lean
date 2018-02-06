@@ -9,6 +9,9 @@ import pprint
 import json
 import sys
 import os
+import pickle
+import uuid
+import subprocess
 
 class Optimizer(object):
     def __init__(self, params_json):
@@ -25,6 +28,8 @@ class Optimizer(object):
         self.params = json.load(fh)
 
     def gen_param_grid(self):
+        ''' re-initialize parameter grid '''
+        self.param_grid = []
         if '__GLOBALS__' not in self.params.keys():
             print('ERROR: {} does not have __GLOBALS__ field required \
                     for further processing'.format(self.params_json))
@@ -46,24 +51,35 @@ class Optimizer(object):
 
     def run(self):
         pp = pprint.PrettyPrinter(indent=4)
-
         cwd = os.path.dirname(os.path.realpath(__file__))
-        config_dir = os.path.join(cwd,'configs')
-        os.mkdir(config_dir)
+        root_dir = os.path.realpath(os.path.join(cwd,'../../'))
+
+        config_dir = os.path.join(root_dir,'OptRuns')
+        run_launch_dir = os.path.join(root_dir,'Launcher/bin/Debug')
+
+        if not os.path.exists(config_dir):
+            os.makedirs(directory)
+
+        pp.pprint('root_dir = {}'.format(root_dir))
+        pp.pprint('config_dir = {}'.format(config_dir))
+        pp.pprint('run_launch_dir = {}'.format(run_launch_dir))
 
         for config in self.param_grid:
             pp.pprint('Generating and executing config:')
             pp.pprint(config)
 
-            '''
-            export JSON
-            '''
-            config_file = os.path.join(config_dir,'config.json')
-            fp = open(config_file,'w')
-            json.dump(config, fp)
-            fp.close()
+            ''' export config pickle '''
+            config_file = os.path.join(config_dir,'config_inst.p')
+            pickle.dump(config, open(config_file, 'wb'))
 
-            ### call Crypto/main.py
+            ''' call QuantConnectLauncher '''
+            os.chdir(run_launch_dir)
+            sp_out = subprocess.run(['mono','./QuantConnect.Lean.Launcher.exe'],stdout=subprocess.PIPE)
+
+            '''
+            sp_out is of type: subprocess.CompletedProcess
+            Process it after completion of command
+            '''
 
 
     def __repr__(self):

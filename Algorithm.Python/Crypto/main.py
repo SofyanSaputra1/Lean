@@ -8,7 +8,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-import numpy as np
+# import numpy as np
 
 import QuantConnect.Indicators as ind
 from QuantConnect.Brokerages import BrokerageName
@@ -16,6 +16,7 @@ from QuantConnect.Data.Consolidators import TradeBarConsolidator
 from QuantConnect.Orders import OrderDirection
 
 import os
+import pickle
 
 MODE = "live" ### 'live' or 'opt'
 
@@ -26,8 +27,10 @@ class IndicatorAlgo(QCAlgorithm):
             from configs import best_configs
             self.runconfig = best_configs
         else:
-            from config_inst import inst_configs
-            self.runconfig = inst_configs
+            cwd = os.path.dirname(os.path.realpath(__file__))
+            config_inst = os.path.join(cwd,'../../OptRuns/','config_inst.p')
+            self.runconfig = pickle.load(open(config_inst,'rb'))
+
 
         #####################
         # Backtest Settings #
