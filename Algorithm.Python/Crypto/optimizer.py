@@ -13,6 +13,10 @@ import pickle
 import uuid
 import subprocess
 
+if sys.version_info[:2] != (2,7):
+    sys.stderr.write('Platinum optimizer designed to work with python 2.7')
+    exit(1)
+
 class Optimizer(object):
     def __init__(self, params_json):
         self.params_json = params_json
@@ -74,13 +78,24 @@ class Optimizer(object):
 
             ''' call QuantConnectLauncher '''
             os.chdir(run_launch_dir)
-            # sp_out = subprocess.run(['mono','./QuantConnect.Lean.Launcher.exe'],stdout=subprocess.PIPE)
-            sp_out = subprocess.call(['mono','./QuantConnect.Lean.Launcher.exe'])
 
             '''
-            sp_out is of type: subprocess.CompletedProcess
-            Process it after completion of command
+            if python version > 3.5, use subprocess run; but conflicts with QC exist 
+            backtest_out is of type subprocess.CompletedProcess
             '''
+            # backtest_out = subprocess.run(['mono','./QuantConnect.Lean.Launcher.exe'],stdout=subprocess.PIPE)
+
+            '''
+            if python version == 2.7, use subprocess call/check_output
+            backtest_out is of type str
+            '''
+            # backtest_out = subprocess.check_output(['mono','./QuantConnect.Lean.Launcher.exe'])
+            # backtest_out = subprocess.call(['mono','./QuantConnect.Lean.Launcher.exe'])
+            subprocess.call(['mono','./QuantConnect.Lean.Launcher.exe'])
+            # for l in backtest_out.splitlines():
+                # if l.contains('')
+
+
 
         os.chdir(root_dir)
 

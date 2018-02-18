@@ -1,7 +1,7 @@
 
 configs = {
         '__GLOBALS__': {
-            '__TARGET_CRYPTOS__': ['ETHUSD', 'BTCUSD'],
+            '__TARGET_CRYPTOS__': ['BTCUSD'],
             '__INDICATORS__': ['__COMBO__'],
             '__TIME_RESOLUTION__': ['Resolution.Minute'],
             '__WARMUP_LOOKBACK__': [30],
@@ -27,8 +27,8 @@ configs = {
             'VOLUME_MIN': [100],
             'RSI_PERIOD': [14],
             'RSI_MOVING_AVERAGE_TYPE': ['MovingAverageType.Wilders'],
-            'RSI_LOWER': [30],
-            'RSI_UPPER': [70]
+            'RSI_LOWER': [45],
+            'RSI_UPPER': [55]
             },
 
 

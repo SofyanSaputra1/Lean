@@ -18,7 +18,7 @@ from QuantConnect.Orders import OrderDirection
 import os
 import pickle
 
-MODE = "live" ### 'live' or 'opt'
+MODE = "opt" ### 'live' or 'opt'
 
 class IndicatorAlgo(QCAlgorithm):
     def Initialize(self):
@@ -78,7 +78,8 @@ class IndicatorAlgo(QCAlgorithm):
 
         # Bollinger Variables
         if 'MOVING_AVERAGE_TYPE' in self.runconfig:
-            self.moving_average_type = getattr(ind, str(self.runconfig['MOVING_AVERAGE_TYPE']))
+            if self.runconfig['MOVING_AVERAGE_TYPE'] == 'MovingAverageType.Exponential':
+                self.moving_average_type = ind.MovingAverageType.Exponential
         else:
             self.moving_average_type = ind.MovingAverageType.Exponential
 
@@ -125,7 +126,8 @@ class IndicatorAlgo(QCAlgorithm):
             self.MACD_signal_period = 9
 
         if 'MACD_MOVING_AVERAGE_TYPE' in self.runconfig:
-            self.MACD_moving_average_type = getattr(ind, str(self.runconfig['MACD_MOVING_AVERAGE_TYPE']))
+            if self.runconfig['MACD_MOVING_AVERAGE_TYPE'] == 'MovingAverageType.Exponential':
+                self.MACD_moving_average_type = ind.MovingAverageType.Exponential
         else:
             self.MACD_moving_average_type = ind.MovingAverageType.Exponential
 
@@ -176,7 +178,8 @@ class IndicatorAlgo(QCAlgorithm):
             self.rsi_period = 14
 
         if 'RSI_MOVING_AVERAGE_TYPE' in self.runconfig:
-            self.rsi_moving_average_type = getattr(ind, str(self.runconfig['RSI_MOVING_AVERAGE_TYPE']))
+            if self.runconfig['RSI_MOVING_AVERAGE_TYPE'] == 'MovingAverageType.Wilders':
+                self.rsi_moving_average_type = ind.MovingAverageType.Wilders
         else:
             self.rsi_moving_average_type = ind.MovingAverageType.Wilders
 
@@ -243,6 +246,8 @@ class IndicatorAlgo(QCAlgorithm):
             #self.RegisterIndicator(self.target_crypto, self.rsi, barConsolidator)
 
 
+        ### Rolling Window Data update
+        self.window = RollingWindow[TradeBar](2)
 
         # Processing variables
         self.pending_limit_price = 0
@@ -254,6 +259,10 @@ class IndicatorAlgo(QCAlgorithm):
                          Action(self.PlotCryptoIndicator))
 
     def OnData(self, data):
+
+        ### Rolling Window
+        self.window.Add(self.data[self.target_crypto])
+
         ##########################
         # OnData Processing Vars #
         ##########################
@@ -343,35 +352,40 @@ class IndicatorAlgo(QCAlgorithm):
                 self.pending_limit_price = sell_price
         elif self.indicator_name == "__COMBO__":
 
+            '''
+            (RSI with period 16:
+
+                BUY WHEN RSI < 45
+                SELL when RSI > 55
+            ) AND
+
+            (BOLLINGER 
+                BUY WHEN PRICE < LOWER-BAND AND RISES ABOVE IT
+                SELL WHEN PRICE > UPPER-BAND AND FALLS BELOW IT
+            )
+            '''
+
             if not self.bolband.IsReady or not self.macd.IsReady or not self.ichimoku.IsReady or not self.rsi.IsReady:
                 return
+
             signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
 
             if holdings == 0 and (
-                last_price > self.bolband.UpperBand.Current.Value and
-                signalDeltaPercent > self.MACD_tolerance and
-                self.ichimoku.Tenkan.Current.Value > self.ichimoku.Kijun.Current.Value
-                and self.ichimoku.SenkouA.Current.Value > self.ichimoku.SenkouB.Current.Value
-                and last_price > self.ichimoku.SenkouA.Current.Value and
-                self.rsi.Current.Value < self.rsi_lower and
-                volume > self.volume_min
-                ):
+                    self.rsi.Current.Value < self.rsi_lower and
+                    self.window[1] < self.bolband.LowerBand.Current.Value and
+                    self.window[0] > self.window[1]
+                    ):
+
                 self.LimitOrder(self.target_crypto, amount, buy_price)
                 self.pending_limit_price = buy_price
+
             elif holdings > 0 and (
-                last_price < self.bolband.MiddleBand.Current.Value and
-                signalDeltaPercent < -self.MACD_tolerance and
-                (self.ichimoku.Tenkan.Current.Value <= self.ichimoku.Kijun.Current.Value
-                 and self.ichimoku.SenkouA.Current.Value < self.ichimoku.SenkouB.Current.Value
-                 and last_price < self.ichimoku.SenkouA.Current.Value) and
-                self.rsi.Current.Value > self.rsi_upper and
-                volume > self.volume_min
-            ):
+                    self.rsi.Current.Value > self.rsi_upper and
+                    self.window[1] > self.bolband.UpperBand.Current.Value and
+                    self.window[0] < self.window[1]
+                    ):
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
-
-
-
 
 
     # def OnOrderEvent(self, orderEvent):
